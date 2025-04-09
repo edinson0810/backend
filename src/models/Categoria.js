@@ -1,54 +1,48 @@
-import connection from "../utils/db.js";
+import connection from '../utils/db.js'
 
-class Categoria{
-    constructor() {
-        // console.log("hola desde el constructor ");
-        
+class Categoria {
+  constructor() { }
+
+  // Métodos -> Listar
+  async getAll() {
+    try {
+      const [rows] = await connection.query("SELECT * FROM categorias");
+      return rows;
+    } catch (error) {
+      throw new Error("Error al obtener las catgorías");
     }
-   async getALL() {
-        try {
-            const [rows] = await connection.query("Select * from categorias");
-            return rows;
-        } catch (error) {
-            throw error("error al obtener la categorias");
-        }
-        
+  }
+  // Método -> crear una categoría
+  async create(nombre, descripcion) {
+    const [result] = await connection.query("insert into categorias (nombre, descripcion) value (?, ?)", [nombre, descripcion]);
+    return {
+      id: result.insertId,
+      nombre,
+      descripcion
     }
+  }
 
-async create(nombre, descripcion) {
-  const [result] = await connection.query("insert into categorias (nombre, descripcion) values (?, ?)", [nombre, descripcion]);
-
- return{
-    id : result.id,
-    nombre: nombre,
-    descripcion: descripcion
- }
-
-}
-
- async getById(id) {
-   try {
-    const [rows] = await connection.query("select * from categorias whee id = ?", [id]);
-    if( rows.length === 0) {
-        throw new Error ("Categoria no encontrada");
+  async getById(id) {
+    try {
+      const [rows] = await connection.query("select * from categorias where id = ?", [id]);
+      if (rows.length === 0) {
+        throw new Error("Categoria no encontrada");
+      }
+      return rows[0];
+    } catch (error) {
+      throw new Error("Error al obtener la categoria");
     }
-    return rows[0];
-   } catch (error) {
-    throw new Error ("Error al obtener la categoria");
-   }
-}
+  }
 
-estaRelaconadaConProductos( categoria_id){
-    
-}
+  estaRelacionadaConProductos(categoria_id) {
+    // select * from productos where categoria_id = 3
+  }
 
-
- async delete (id){
-let datos = await this.getById(id);
-console.log(datos);
-
-}
-
+  async delete(id) {
+    let datos = await this.getById(id)
+    // let tieneRelacion = this.estaRelacionadaConProductos()
+    console.log(datos);
+  }
 }
 
 export default Categoria;
