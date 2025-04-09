@@ -15,8 +15,38 @@ class Categoria{
         
     }
 
-create(nombre, descripcion) {
- connection.query("insert into categorias (nombre, descripcion) values (?, ?)", [nombre, descripcion]);
+async create(nombre, descripcion) {
+  const [result] = await connection.query("insert into categorias (nombre, descripcion) values (?, ?)", [nombre, descripcion]);
+
+ return{
+    id : result.id,
+    nombre: nombre,
+    descripcion: descripcion
+ }
+
+}
+
+ async getById(id) {
+   try {
+    const [rows] = await connection.query("select * from categorias whee id = ?", [id]);
+    if( rows.length === 0) {
+        throw new Error ("Categoria no encontrada");
+    }
+    return rows[0];
+   } catch (error) {
+    throw new Error ("Error al obtener la categoria");
+   }
+}
+
+estaRelaconadaConProductos( categoria_id){
+    
+}
+
+
+ async delete (id){
+let datos = await this.getById(id);
+console.log(datos);
+
 }
 
 }
