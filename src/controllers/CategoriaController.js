@@ -1,7 +1,12 @@
 import Categoria from "../models/Categoria.js";
 
 class CategoriaController {
-
+ /**
+  * Descripcion claro del metodo
+  * @param {object} req 
+  * @param {object} res 
+  * @returns json
+  */
   // Métodos
   static async getAllCategorias(req, res) {
     const OBJCategoria = new Categoria();
@@ -15,11 +20,21 @@ class CategoriaController {
     const categoria = await OBJCategoria.create(nombre, descripcion);
     return res.json(categoria)
   }
+
+  static async updateCategoria(req, res) {
+    const {id} = req.params;
+    const { nombre } = req.body;
+    const OBJCategoria = new Categoria();
+     const data =  await OBJCategoria.update(id, nombre);
+    return res.json(data)
+   
+  }
   // Método eliminar categoria
-  static deleteCategoria(req, res) {
+  static async deleteCategoria(req, res) {
     const { id } = req.params;
     const OBJCategoria = new Categoria();
-    const categoria = OBJCategoria.delete(id);
+    const categoria = await OBJCategoria.delete(id);
+    return res.json(categoria);
   }
 
 }

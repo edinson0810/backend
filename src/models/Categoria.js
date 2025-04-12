@@ -24,7 +24,9 @@ class Categoria {
 
   async getById(id) {
     try {
-      const [rows] = await connection.query("select * from categorias where id = ?", [id]);
+      const [rows] = await connection.query("select * from categorias where id = ?",[id]);
+      // console.log(rows);
+      
       if (rows.length === 0) {
         throw new Error("Categoria no encontrada");
       }
@@ -34,15 +36,65 @@ class Categoria {
     }
   }
 
-  estaRelacionadaConProductos(categoria_id) {
-    // select * from productos where categoria_id = 3
+  async estaRelacionadaConProductos(categoria_id) {
+    try {
+      const [rows] = await connection.query("select * from productos where categoria_id = ?", 
+      [categoria_id]);
+      // console.log(rows);
+      
+      return rows;
+    } catch (error) {
+      throw new Error("Error al obtener la categoria");
+    }
   }
 
-  async delete(id) {
-    let datos = await this.getById(id)
-    // let tieneRelacion = this.estaRelacionadaConProductos()
-    console.log(datos);
+async update (id, nombre){
+    try {
+    const [result] = await connection.query("update productos set nombre  = ? where id = ?", [nombre,id]);
+    if (result.affectedRows === 0) {
+      return {
+        error: true,
+        mensaje : "No se pudo actualziar la categoria"
+        
+        
+      }
+    }
+    return{
+      error : false,
+      mensaje: "Categoria actualizada exitosamente",
+    }
+  } catch (error) {
+    throw new Error("Error al actualizar la categoria");
+    
   }
+}
+
+  async delete(id) {
+    try {
+     let datos = await this.getById(id)
+    let tieneProductos = await this.estaRelacionadaConProductos(datos.id)
+    if (tieneProductos.length > 0) {
+      return {
+        error : true,
+      mensaje : "No puede eliminar la Categoria"
+      } 
+    }
+      const [result] = await connection.query("delete from categorias  where id = ?", [id]);
+   if (result.affectedRows === 0) {
+    return {
+      error: true,
+      mensaje : " Categoria no encontrada"
+    }
+   } 
+   return {
+    error: false,
+    mensaje: " Categoria eliminada exitosamente",
+    data: datos
+   }
+    } catch (error) {
+      console.log(error);
+     }
+    }
 }
 
 export default Categoria;
