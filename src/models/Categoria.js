@@ -9,17 +9,20 @@ class Categoria {
       const [rows] = await connection.query("SELECT * FROM categorias");
       return rows;
     } catch (error) {
-      throw new Error("Error al obtener las catgorías");
+      throw new Error("Error al obtener las categorías");
     }
   }
   // Método -> crear una categoría
   async create(nombre, descripcion) {
     const [result] = await connection.query("insert into categorias (nombre, descripcion) value (?, ?)", [nombre, descripcion]);
-    return {
-      id: result.insertId,
-      nombre,
-      descripcion
+    if ( !nombre || !descripcion) {
+      throw new Error("El nombre y descripcion son obligatorios");
     }
+    // return {
+    //   id: result.insertId,
+    //   nombre,
+    //   descripcion
+    // }
   }
 
   async getById(id) {
@@ -49,12 +52,13 @@ class Categoria {
   }
 
 async update (id, nombre){
+  
     try {
     const [result] = await connection.query("update productos set nombre  = ? where id = ?", [nombre,id]);
     if (result.affectedRows === 0) {
       return {
         error: true,
-        mensaje : "No se pudo actualziar la categoria"
+        mensaje : "No se pudo actualiziar la categoria"
         
         
       }
