@@ -29,6 +29,17 @@ class CategoriaController {
     return res.json(data)
    
   }
+
+ // Método pra actualizar parcial
+ static async updatePartial(req, res){
+  // Obtener el id
+  const {id} = req.params;
+  const campos = req.body;
+  const OBJCategoria = new Categoria();
+ const data = await OBJCategoria.updatePartial(id, campos); 
+  return res.json(data);
+}
+
   // Método eliminar categoria
   static async deleteCategoria(req, res) {
     const { id } = req.params;

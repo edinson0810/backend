@@ -14,15 +14,22 @@ class Categoria {
   }
   // Método -> crear una categoría
   async create(nombre, descripcion) {
-    const [result] = await connection.query("insert into categorias (nombre, descripcion) value (?, ?)", [nombre, descripcion]);
-    if ( !nombre || !descripcion) {
-      throw new Error("El nombre y descripcion son obligatorios");
+    if (!nombre || !descripcion) {
+      return handleResponse({ type: 'validation', customMessage: "Nombre y descripción son requeridos" });
     }
-    // return {
-    //   id: result.insertId,
-    //   nombre,
-    //   descripcion
-    // }
+    try {
+      const [result] = await connection.query(
+        "insert into categorias (nombre,descripcion) value (?, ?)",
+        [nombre, descripcion]
+      );
+
+      return handleResponse({
+        data: [{ id: result.insertId, nombre, descripcion }],
+        customMessage: "Categoría creada con éxito"
+      });
+    } catch (error) {
+      return handleResponse({ error, type: 'database', customMessage: "Error al crear la categoría" });
+    }
   }
 
   async getById(id) {
