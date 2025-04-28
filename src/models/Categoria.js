@@ -1,18 +1,18 @@
 import connection from '../utils/db.js'
+import { handleResponse } from "../middlewares/responseHandler.js";
 
 class Categoria {
-  constructor() { }
+  constructor() {}
 
-  // Métodos -> Listar
   async getAll() {
     try {
-      const [rows] = await connection.query("SELECT * FROM categorias");
-      return rows;
+      const [rows] = await connection.query("select * from categorias");
+      return handleResponse({ data: rows, customMessage: "Categorías obtenidas con éxito" });
     } catch (error) {
-      throw new Error("Error al obtener las categorías");
+      return handleResponse({ error, type: 'database', customMessage: "Error al obtener las categorías" });
     }
   }
-  // Método -> crear una categoría
+
   async create(nombre, descripcion) {
     if (!nombre || !descripcion) {
       return handleResponse({ type: 'validation', customMessage: "Nombre y descripción son requeridos" });
@@ -34,78 +34,109 @@ class Categoria {
 
   async getById(id) {
     try {
-      const [rows] = await connection.query("select * from categorias where id = ?",[id]);
-      // console.log(rows);
-      
+      const [rows] = await connection.query(
+        "select * from categorias where id = ?",
+        [id]
+      );
       if (rows.length === 0) {
-        throw new Error("Categoria no encontrada");
+        return handleResponse({ type: 'not_found', customMessage: "Categoría no encontrada" });
       }
-      return rows[0];
+      return handleResponse({ data: rows, customMessage: "Categoría obtenida con éxito" });
     } catch (error) {
-      throw new Error("Error al obtener la categoria");
+      return handleResponse({ error, type: 'database', customMessage: "Error al obtener la categoría" });
     }
   }
 
   async estaRelacionadaConProductos(categoria_id) {
     try {
-      const [rows] = await connection.query("select * from productos where categoria_id = ?", 
-      [categoria_id]);
-      // console.log(rows);
-      
-      return rows;
+      const [rows] = await connection.query(
+        "select * from productos where categoria_id = ?",
+        [categoria_id]
+      );
+      return handleResponse({ data: rows, customMessage: "Productos relacionados obtenidos con éxito" });
     } catch (error) {
-      throw new Error("Error al obtener la categoria");
+      return handleResponse({ error, type: 'database', customMessage: "Error al verificar productos relacionados" });
     }
   }
 
-async update (id, nombre){
-  
+  async update(id, nombre) {
+    if (!nombre) {
+      return handleResponse({ type: 'validation', customMessage: "El nombre es requerido para actualizar" });
+    }
     try {
-    const [result] = await connection.query("update productos set nombre  = ? where id = ?", [nombre,id]);
-    if (result.affectedRows === 0) {
-      return {
-        error: true,
-        mensaje : "No se pudo actualiziar la categoria"
-        
-        
+      const [result] = await connection.query(
+        "update categorias set nombre = ? where id = ?",
+        [nombre, id]
+      );
+      if (result.affectedRows === 0) {
+        return handleResponse({ type: 'not_found', customMessage: "No se encontró la categoría para actualizar" });
       }
+      return handleResponse({
+        data: [{ id, nombre }],
+        customMessage: "Categoría actualizada correctamente"
+      });
+    } catch (error) {
+      return handleResponse({ error, type: 'database', customMessage: "Error al actualizar la categoría" });
     }
-    return{
-      error : false,
-      mensaje: "Categoria actualizada exitosamente",
-    }
-  } catch (error) {
-    throw new Error("Error al actualizar la categoria");
-    
   }
-}
+
+  async updatePartial(id, campos) {
+    if (Object.keys(campos).length === 0) {
+      return handleResponse({ type: 'validation', customMessage: "Se requiere al menos un campo para actualizar" });
+    }
+    let query = "update categorias set ";
+    let params = [];
+    try {
+      for (const [key, value] of Object.entries(campos)) {
+        query += `${key} = ?, `;
+        params.push(value);
+      }
+      query = query.slice(0, -2) + " where id = ?";
+      params.push(id);
+      
+      const [result] = await connection.query(query, params);
+      
+      if (result.affectedRows === 0) {
+        return handleResponse({ type: 'not_found', customMessage: "No se encontró la categoría para actualizar" });
+      }
+      return handleResponse({
+        data: [{ id, ...campos }],
+        customMessage: "Categoría actualizada correctamente"
+      });
+    } catch (error) {
+      return handleResponse({ error, type: 'database', customMessage: "Error al actualizar la categoría" });
+    }
+  }
 
   async delete(id) {
     try {
-     let datos = await this.getById(id)
-    let tieneProductos = await this.estaRelacionadaConProductos(datos.id)
-    if (tieneProductos.length > 0) {
-      return {
-        error : true,
-      mensaje : "No puede eliminar la Categoria"
-      } 
-    }
-      const [result] = await connection.query("delete from categorias  where id = ?", [id]);
-   if (result.affectedRows === 0) {
-    return {
-      error: true,
-      mensaje : " Categoria no encontrada"
-    }
-   } 
-   return {
-    error: false,
-    mensaje: " Categoria eliminada exitosamente",
-    data: datos
-   }
+      let datos = await this.getById(id);
+      if (datos.error) return datos;
+      
+      let tieneProductos = await this.estaRelacionadaConProductos(datos.id);
+      if (tieneProductos.error) return tieneProductos;
+      
+      if (tieneProductos.length > 0) {
+        return handleResponse({ type: 'validation', customMessage: "No se puede eliminar la categoría porque tiene productos relacionados" });
+      }
+      
+      const [result] = await connection.query(
+        "delete from categorias where id = ?",
+        [id]
+      );
+      
+      if (result.affectedRows === 0) {
+        return handleResponse({ type: 'not_found', customMessage: "No se pudo eliminar la categoría" });
+      }
+      
+      return handleResponse({
+        data: [datos],
+        customMessage: "Categoría eliminada con éxito"
+      });
     } catch (error) {
-      console.log(error);
-     }
+      return handleResponse({ error, type: 'database', customMessage: "Error al eliminar la categoría" });
     }
+  }
 }
 
 export default Categoria;

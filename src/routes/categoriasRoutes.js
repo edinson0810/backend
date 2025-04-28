@@ -7,13 +7,14 @@ const router = express();
 
 router.get('/', CategoriaController.getAllCategorias);
 
+router.get('/:id', CategoriaController.getCategoriaById); 
+
 router.post('/', validarDatos, CategoriaController.createCategoria);
 
-router.put("/:id", CategoriaController.updateCategoria)
+router.put('/:id',validarDatos,CategoriaController.updateCategoria);
 
 router.patch('/:id',validarDatos,CategoriaController.updatePartial);
 
 router.delete('/:id', CategoriaController.deleteCategoria);
-
 
 export default router;

@@ -11,5 +11,5 @@ app.use("/categorias", categoriasRoutes)
 
 
 app.listen(3000, () => {
-    // console.log("Hola ");
+    console.log("Servidor escuchando en http://localhost:3000");
 })
